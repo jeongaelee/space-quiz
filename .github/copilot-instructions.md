@@ -11,7 +11,7 @@
 ## Architecture
 
 - `index.html` is the complete application: the first inline script selects the light/dark theme, the inline stylesheet defines all presentation and animation, semantic HTML provides the quiz and result screens, and the final inline script owns data and behavior.
-- `questions` is the content model. Each item has `category`, `question`, four `answers`, a zero-based `correct` index, and `explanation`.
+- `questionBank` is the immutable content model. `createQuizQuestions` builds the active `questions` array by shuffling questions and each question's answers while recalculating the zero-based `correct` index.
 - The app is a small state machine driven by `currentIndex`, `score`, and the per-question `responses` array. `renderQuestion` rebuilds answer buttons and restores prior feedback, `selectAnswer` locks and grades the current question once, navigation moves among unanswered or selected questions, `showResults` switches screens only after every response, and `restartQuiz` resets state.
 - The quiz and result views coexist in the document and switch via the `hidden` attribute. Keep score text, progress text/bar/ARIA state, feedback, and focus movement synchronized with state transitions.
 

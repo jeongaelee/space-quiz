@@ -568,7 +568,7 @@
   </main>
 
   <script>
-    const questions = [
+    const questionBank = [
       {
         category: "🌍 태양계",
         question: "태양계에서 가장 큰 행성은 무엇일까요?",
@@ -640,6 +640,57 @@
         explanation: "태양계는 막대나선은하인 우리은하의 오리온자리 팔에 위치합니다."
       }
     ];
+
+    function shuffle(items) {
+      const shuffled = [...items];
+      for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+      }
+      return shuffled;
+    }
+
+    function ensureDifferentOrder(items, previousValues, getValue) {
+      if (
+        items.length > 1 &&
+        previousValues.length === items.length &&
+        items.every((item, index) => getValue(item) === previousValues[index])
+      ) {
+        items.push(items.shift());
+      }
+      return items;
+    }
+
+    function createQuizQuestions(previousQuestions = []) {
+      const previousAnswersByQuestion = new Map(
+        previousQuestions.map((item) => [item.question, item.answers])
+      );
+      const randomizedQuestions = questionBank.map((item) => {
+        const answerOptions = item.answers.map((answer, index) => ({
+          text: answer,
+          isCorrect: index === item.correct
+        }));
+        const randomizedAnswers = ensureDifferentOrder(
+          shuffle(answerOptions),
+          previousAnswersByQuestion.get(item.question) || [],
+          (answer) => answer.text
+        );
+
+        return {
+          ...item,
+          answers: randomizedAnswers.map((answer) => answer.text),
+          correct: randomizedAnswers.findIndex((answer) => answer.isCorrect)
+        };
+      });
+
+      return ensureDifferentOrder(
+        shuffle(randomizedQuestions),
+        previousQuestions.map((item) => item.question),
+        (item) => item.question
+      );
+    }
+
+    let questions = createQuizQuestions();
 
     const quizScreen = document.querySelector("#quiz-screen");
     const resultScreen = document.querySelector("#result-screen");
@@ -872,6 +923,7 @@
     function restartQuiz() {
       currentIndex = 0;
       score = 0;
+      questions = createQuizQuestions(questions);
       responses = Array(questions.length).fill(null);
       scoreEl.textContent = "0";
       resultScreen.hidden = true;
