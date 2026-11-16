@@ -8,9 +8,10 @@
   <script>
     (() => {
       const param = new URLSearchParams(window.location.search).get("scoutTheme");
-      const theme =
-        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-      document.documentElement.setAttribute("data-theme", theme);
+      const preference = param === "light" || param === "dark" ? param : "system";
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.themePreference = preference;
+      document.documentElement.dataset.theme = preference === "system" ? systemTheme : preference;
     })();
   </script>
   <style>
@@ -76,6 +77,8 @@
     .brand svg { width: 31px; height: 31px; color: var(--cp-accent); }
     .intro { text-align: center; margin: 23px 0 27px; }
     .eyebrow { color: var(--cp-accent); font-size: 11px; font-weight: 750; letter-spacing: 2.4px; text-transform: uppercase; }
+    .appearance-control { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin: -8px 0 16px; color: var(--cp-text-muted); font-size: 12px; }
+    .appearance-control select { max-width: 100%; padding: 5px 8px; border: 1px solid var(--cp-border); border-radius: 7px; background: var(--cp-surface); color: var(--cp-text); font: inherit; cursor: pointer; }
     h1 { position: relative; margin: 9px 0 10px; padding: 13px 15px; border: 1px solid var(--cp-border); border-left: 3px solid var(--cp-accent); border-radius: 10px; background: var(--cp-surface); box-shadow: inset 0 0 0 1px var(--cp-highlight); font: 650 clamp(18px, 4.8vw, 25px)/1.5 Consolas, "Courier New", Courier, monospace; letter-spacing: .06em; text-transform: uppercase; }
     .intro p { color: var(--cp-text-muted); margin: 0; }
     .status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; }
@@ -151,6 +154,14 @@
         <p>10 questions to take you out of this world.</p>
       </div>
     </header>
+    <div class="appearance-control">
+      <label for="appearance-select">Appearance</label>
+      <select id="appearance-select">
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
     <div class="status">
       <div id="question-count"><strong>Question 01</strong> <span class="muted">/ 10</span></div>
       <div class="score" aria-live="polite" aria-atomic="true"><span aria-hidden="true">✦</span> <strong id="score">0</strong><span>points</span></div>
@@ -319,8 +330,16 @@
       if (event.altKey || event.ctrlKey || event.metaKey || event.repeat || answered || $("quiz").hidden) return;
       if (/^[1-4]$/.test(event.key)) { event.preventDefault(); selectAnswer(Number(event.key) - 1); }
     });
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
-      if (!new URLSearchParams(location.search).has("scoutTheme")) {
+    const systemAppearance = window.matchMedia("(prefers-color-scheme: dark)");
+    $("appearance-select").value = document.documentElement.dataset.themePreference;
+    $("appearance-select").addEventListener("change", (event) => {
+      const preference = event.target.value;
+      document.documentElement.dataset.themePreference = preference;
+      document.documentElement.dataset.theme =
+        preference === "system" ? (systemAppearance.matches ? "dark" : "light") : preference;
+    });
+    systemAppearance.addEventListener("change", (event) => {
+      if (document.documentElement.dataset.themePreference === "system") {
         document.documentElement.dataset.theme = event.matches ? "dark" : "light";
       }
     });
